@@ -57,5 +57,6 @@ CommandResult *PlayCommand::execute(ServerClient *sender, std::vector<std::strin
         //LINFO << "Error playing move: " << moveToString;
         return new CommandResult(false, ERROR, "Error playing move", true);
     }
+
     return new CommandResult(true, PLAY, "player_move", true);
 }
