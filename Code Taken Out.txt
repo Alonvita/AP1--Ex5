@@ -1,0 +1,54 @@
+(old) CONTROLLER -> ExecuteCommand:
+
+// Local Variables
+    TurnsManager* manager = this->manager;
+    Board* board = this->board;
+
+    // serialize message to playerMove
+    CellIndex move = stringToPlayerMove(msg.getMessage());
+
+    // evaluate player turn
+    bool playerTurn = manager->getCurrentPlayerColor();
+
+    // if move is illegal
+    if (!manager->isMoveLegal(move)) {
+        notifyClient(current, IllegalMoveMessage());
+        // turn doesn't change
+        return playerTurn;
+    } else {
+        // ack current
+        notifyClient(current, MoveReceivedMessage());
+    }
+
+    // play move on board
+    board->moveMade(move, manager->getCurrentPlayerColor());
+    // next player's turn
+    manager->endTurn();
+    // updateBoardWithMove clients
+    broadCast(msg);
+
+    // no more cells available - finish game
+    if (!board->getSpaceLeft()) {
+        return -1;
+    }
+
+    // evaluate player moves for next player
+    manager->evaluateAvailableMovesForThisTurn(board);
+    if(manager->getAvailableMovesNum() == 0) {
+        notifyClient(
+                current, PlayAgainMessage());
+
+        // serialize player's available moves
+        string aMoves = parseAvailableMoves(this->manager->getAvailableMoves());
+        // notify player for his available moves
+        notifyClient(clients[playerTurn], Message(aMoves));
+        return playerTurn;
+    }
+
+    // serialize next player's moves
+    string aMoves = parseAvailableMoves(this->manager->getAvailableMoves());
+    // notify next players for his available moves
+    notifyClient(clients[!playerTurn], Message(aMoves));
+
+    // move made -> next player's turn
+    return !playerTurn;
