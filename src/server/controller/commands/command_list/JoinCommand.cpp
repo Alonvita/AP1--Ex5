@@ -32,7 +32,7 @@ CommandResult* JoinCommand::execute(ServerClient* sender, std::vector<std::strin
 
     if(!(model->gameExists(args[1])))
         return  new CommandResult(false, ERROR, "A game is not available under this name: " + args[1] +
-                                                "\nmaybe it was started without you...\n", true);
+                                                "\nmaybe it was started without you...", true);
 
     LINFO << "Creating a JoinRequest for: " << args[1];
     JoinRequest* req = new JoinRequest(sender, args[1]);
@@ -42,7 +42,7 @@ CommandResult* JoinCommand::execute(ServerClient* sender, std::vector<std::strin
         model->joinGame(req);
     } catch (exception& e) {
         LINFO << "Error while joining game through model";
-        return new CommandResult(false, ERROR, "Error joining game\n", true);
+        return new CommandResult(false, ERROR, "Error joining game", true);
     }
 
     return new CommandResult(true, JOIN, "joined_game", true);

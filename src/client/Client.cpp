@@ -3,8 +3,9 @@
 //
 
 #include "Client.h"
-#include "../display/Display.h"
 #include "../easy_logging/easylogging++.h"
+#include "../shared_data/Notification.h"
+#include "../shared_data/CommandResult.h"
 
 /**
  * Client(string serverIP, int serverPort) initializer.
@@ -12,9 +13,19 @@
  * @param serverIP string -- server IP
  * @param serverPort int -- server port
  */
-Client::Client(std::string serverIP, int serverPort) :
-        serverIP(serverIP), serverPort(serverPort), clientSocket(0) {
+Client::Client(std::string serverIP, int serverPort) {
+    this->serverIP = serverIP;
+    this->serverPort = serverPort;
+    this->clientSocket = -1;
+    this->stayConnected = true;
     clientCreatedAnnouncement();
+}
+
+/**
+ * updateConnectionStatus().
+ */
+void Client::updateConnectionStatus() {
+    this->stayConnected = !stayConnected;
 }
 
 /**
@@ -46,309 +57,134 @@ void Client::connectToServer() {
  */
 void Client::connected() {
     // Local Variables
-    char msg[MAX_MESSAGE_SIZE] = {0};
-    std::string str;
+    std::string serverMessage;
     char dummy;
+    char msg[MAX_MESSAGE_SIZE] = {0};
+
+    // read ad print server instructions
+    read(clientSocket, msg, MAX_MESSAGE_SIZE);
+    cout << msg;
 
     // scan the \n from main menu
     scanf("%c", &dummy);
 
-    // read welcome to server message
-    read(clientSocket, msg, MAX_MESSAGE_SIZE);
+    do {
+        // write
+        writeMessageToServer();
+
+        // read server traffic
+        serverMessage = readTrafficUntilCommandResult();
+
+        // print message
+        cout << serverMessage << endl;
+
+    } while (stayConnected);
+}
+
+/**
+ * writeMessateToServer().
+ */
+void Client::writeMessageToServer() {
+    // Local Variables
+    char msg[MAX_MESSAGE_SIZE] = {0};
+    std::string str;
 
 
+    // write command to socket
     cout << "Enter a command\n";
-    fgets(msg, 1024, stdin);
+    fgets(msg, MAX_MESSAGE_SIZE, stdin);
 
-    str = clearAndCheckString(msg, 255);    // copy message to string
-    memset(msg, 0, 1024);                   // clear for reading
+    // copy message to string
+    str = clearAndCheckString(msg, MAX_MESSAGE_SIZE);
 
     // write message
     write(clientSocket, str.c_str(), str.length() + 1);
-    memset(msg, 0, 1024);                   // clear for reading
-
-    // read message
-    read(clientSocket, msg, 1024);
-
-    cout << msg;
-
-    /*
-    while(true) {
-        cout << "Enter a command\n";
-        fgets(msg, 1024, stdin);
-
-        str = clearAndCheckString(msg, 255);    // copy message to string
-        memset(msg, 0, 1024);                   // clear for reading
-
-        // write message
-        write(clientSocket, str.c_str(), str.length()+1);
-
-        // read message
-        read(clientSocket, msg, 1024);
-
-        str = msg;
-
-        if(strcmp(str.substr(0,11).c_str(), "joined_game") == 0) {
-            // print joined game message
-            cout << "Successfully joined the game! let's play\n";
-
-            this->color = BLACK;
-            myTurn = false;
-
-            LINFO << "BLACK player assigned, going into play() " <<
-                                                                 clientSocket;
-
-            play();
-            return;
-        }
-
-        if(strcmp(str.substr(0,12).c_str(), "game_started") == 0) {
-            cout << "Game has started. Please wait for an opponent...\n";
-
-            color = WHITE;
-            myTurn = true;
-
-            LINFO << "WHITE player assigned, reading start game message "
-                  << clientSocket;
-            // read game started message
-            readUntil(SINGULAR);
-            LINFO << "DONE reading start game message "
-                  << clientSocket;
-
-            LINFO << "reading board message " << clientSocket;
-            // read board as a message
-            readUntil(SINGULAR);
-            LINFO << "DONE reading board message " << clientSocket;
-
-            // read available moves
-            readUntil(SINGULAR);
-            LINFO << "DONE reading board message " << clientSocket;
-
-            LINFO << "going into play(): " << clientSocket;
-            play();
-            return;
-        }
-
-        // print msg
-        cout << str;
-
-        // clear for writing
-        memset(msg, 0, 1024);
-    }*/
+    memset(msg, 0, MAX_MESSAGE_SIZE); // clear msg
 }
 
-
 /**
- * play().
+ * readTrafficUntilCommandResult().
+ *
+ * @return the command result as a string
  */
-/*void Client::play() {
+std::string Client::readTrafficUntilCommandResult() {
     // Local Variables
-    char msg[1024] = {0};
-    std::string str;
-    bool gameClosed = false;
-
-    LINFO << clientSocket << ": I AM PLAYING AS " << color;
-    LINFO << "myTurn: " << myTurn;
-
-    if (color == BLACK) {
-        LINFO << "BLACK player is reading the first board update";
-        // updated board
-        gameClosed = readUntil(SINGULAR);
-    }
-
-    if(gameClosed)
-        return;
+    char msg[MAX_MESSAGE_SIZE] = {0};
+    std::string serverMessage;
+    MessageType messageType = UNKNOWN_MESSAGE_TYPE;
 
     do {
-        if (!myTurn) {
-            LINFO << clientSocket << " player is BLACK";
-            // read other player move
-            LINFO << clientSocket << " Waiting for player move message";
-            gameClosed = readUntil(MOVE_MESSAGE);
-            if(gameClosed)
-                break;
-            LINFO << clientSocket << " Player move message received";
-
-            LINFO << clientSocket <<
-                  " Reading singular message - expecting Board update";
-            // updated board
-            gameClosed = readUntil(SINGULAR);
-            if(gameClosed)
-                break;
-            LINFO << clientSocket <<
-                  " DONE Reading singular message - expecting Board update";
-
-            LINFO <<clientSocket << " Waiting for player available moves "
-                    "update";
-            // read my available moves
-            gameClosed = readUntil(PLAYER_MOVED);
-            if(gameClosed)
-                break;
-            LINFO << clientSocket << " Available moves update received";
-
-            // turn starts
-            LINFO << "Changing turn status for player" << clientSocket;
-            myTurn = true;
-        } else {
-            do {
-
-                LINFO << clientSocket << " player is WHITE";
-                // read from client
-                gameClosed = writeAndReadUntil(BOARD_MESSAGE);
-                if(gameClosed)
-                    break;
-
-                LINFO << "get the board message -- reading the board update"
-                      << clientSocket;
-                // read board update
-                readUntil(SINGULAR);
-                LINFO << "DONE get the board message -- reading the board "
-                        "update" << clientSocket;
-
-                LINFO << clientSocket << ": reading \"played\"";
-                // read "played"
-                read(clientSocket, msg, 1024);
-                LINFO << clientSocket << ": DONE reading \"played\"";
-
-            } while (strcmp(msg, PLAYER_MOVED) != 0);
-            if(gameClosed)
-                break;
-
-            // turn ended
-            myTurn = false;
+        // read a message from server
+        if (read(clientSocket, msg, MAX_MESSAGE_SIZE) < 0) {
+            cout << "Server was closed for an unknown reason";
+            exit(-1);
         }
-    } while(msg != GAME_OVER_MESSAGE);
 
-    // read the game over message
-    readUntil(SINGULAR);
-}*/
+        serverMessage = serializeServerMessage(msg, &messageType);
+    } while (messageType != COMMAND_RESULT);
+
+    // return the message serialized
+    return serverMessage;
+}
 
 /**
- * readUntil(std::string messageType).
+ * serializeServerMessage(char *msg, MessageType *messageType).
+ * @param msg *char -- an array of chars, assumes initialized.
+ * @param messageType *MessageType -- a reference to MessageType type to update.
  *
- * This function will help us ignore all incoming server traffic that is
- *  unecessary or may harm the gameplay.
+ * @return the serialized message as a std::string
  */
-/*bool Client::readUntil(std::string messageType) {
-    char msg[1024] = {0};
-    char dummy;
-    std::string str;
-
-    if(messageType == SINGULAR) {
-        LINFO << clientSocket << " is reading a singular message from server";
-        // read message
-        if(read(clientSocket, msg, 1024) < 1){
-            LINFO << "Server was closed";
-            return true;
-        }
-
-        if(strcmp(msg, GAME_CLOSED_MESSAGE) == 0)
-            return true;
-
-        // print message
-        cout << msg;
-
-        LINFO << clientSocket << " is  DONE reading a singular message from "
-                "server";
-
-        // clear for next operation
-        memset(msg, 0, 1024);
-
-        return false;
-    } else {
-        do {
-            // clear for next operation
-            memset(msg, 0, 1024);
-
-            LINFO << clientSocket << " is reading a (looped) message from "
-                    "server";
-            // read message
-            if(read(clientSocket, msg, 1024) < 1) {
-                LINFO << "Server was closed";
-                return true;
-            }
-
-            if(strcmp(msg, GAME_CLOSED_MESSAGE) == 0)
-                return true;
-
-            if (strcmp(msg, messageType.c_str()) == 0) {
-                LDEBUG << "breaking out of loop with message: " << msg;
-                break;
-            }
-
-            // print message
-            cout << msg;
-
-        } while(true);
-        LINFO << clientSocket << " is DONE reading a (looped) message from "
-                "server";
+std::string Client::serializeServerMessage(char msg[MAX_MESSAGE_SIZE], MessageType *messageType) {
+    // check message type
+    if (*(msg + MESSAGE_TYPE_OFFSET) - '0' == UNKNOWN_MESSAGE_TYPE) {
+        *messageType = UNKNOWN_MESSAGE_TYPE;
     }
-    // never got a "close" message - return false.
-    return false;
 
-}*/
+    if (*(msg + MESSAGE_TYPE_OFFSET) - '0' == NOTIFICATION) {
+        *messageType = NOTIFICATION;
+        return serializeNotification(msg + MESSAGE_DATA_OFFSET);
+    }
 
-/**
- * scanCommand().
- */
-/*void Client::writeCommandToServer() {
-    // Local Variables
-    char msg[1024];
-    std::string str;
-    char dummy;
-
-    LINFO << "client: " << clientSocket << " is inside writeCommandToServer ";
-    fgets(msg, 1024, stdin);
-
-    str = clearAndCheckString(msg, 255);    // copy message to string
-    memset(msg, 0, 1024);                   // clear for reading
-
-    LINFO << "Writing Message: " << str << " by: " << clientSocket <<
-            "indice writeCommandToServer";
-    // write message
-    write(clientSocket, str.c_str(), 1024);
-    LINFO << "Message wrote: " << str << " by: " << clientSocket <<
-          "indice writeCommandToServer";
-}*/
+    if (*(msg + MESSAGE_TYPE_OFFSET) - '0' == COMMAND_RESULT) {
+        *messageType = COMMAND_RESULT;
+        return serializeCommandResult(msg + MESSAGE_DATA_OFFSET);
+    }
+}
 
 /**
- * readAndWriteUntil(std::string messageType).
+ * notificationReceived(char msg[MAX_MESSAGE_SIZE]).
+ * @param msg *char -- an array of chars, assumes initalized.
  *
- * @param messageType
+ * @return the serialized Notification as a std::string
  */
-/*bool Client::writeAndReadUntil(std::string messageType) {
-    char msg[1024];
-    std::string str;
+std::string Client::serializeNotification(char *msg) {
+    // Local Variables
+    NotificationType notificationType = (NotificationType) (*(msg + NOTIFICATION_TYPE_OFFSET) - '0');
 
-    do {
-        LINFO << clientSocket << " is inside writeAndReadUntil";
-        // clear for next operation
-        memset(msg, 0, 1024);
+    if (notificationType == GAME_OVER)
+        updateConnectionStatus();
 
-        LINFO << clientSocket << " is writing a message to server (looped)";
-        // scan command
-        cout << "\nMake a move: \n";
-        writeCommandToServer();
-        LINFO << clientSocket << " is DONE writing a message to server "
-                "(looped)";
+    // point msg to the beginning of the Notifications data
+    msg = msg + NOTIFICATION_DATA_OFFSET;
 
-        LINFO << clientSocket << " reading inside writeAndReadUntil";
-        LINFO << clientSocket << " is reading message from server";
+    return std::string(msg);
+}
 
-        // clear for next operation
-        //memset(msg, 0, 1024);
+/**
+ * commandResultReceived(char msg[MAX_MESSAGE_SIZE]).
+ * @param msg *char -- an array of chars, assumes initalized.
+ * @ returns the serialized CommandResult as a std::string
+ */
+std::string Client::serializeCommandResult(char *msg) {
+    bool success = (bool) (*(msg + COMMAND_RESULT_SUCCESS_OFFSET) - '0');
+    Command command = (Command) (*(msg + COMMAND_RESULT_COMMAND_OFFSET) - '0');
 
-        // read message
-        read(clientSocket, msg, 1024);
+    if (!((bool) ((msg + COMMAND_RESULT_KEEPCOM_OFFSET) - '0'))) {
+        updateConnectionStatus();
+    }
 
-        if(strcmp(msg, GAME_CLOSED_MESSAGE) == 0)
-            return true;
+    // point msg to the beginning of the CommandResult data
+    msg = msg + COMMAND_RESULT_DATA_OFFSET;
 
-        // print message
-        cout << msg;
-
-        LINFO << clientSocket << " is DONE reading message from server";
-    } while(strcmp(msg, messageType.c_str()) != 0);
-
-    return false;
-}*/
+    return std::string(msg);
+}

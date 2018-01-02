@@ -43,7 +43,7 @@ CommandResult *PlayCommand::execute(ServerClient *sender, std::vector<std::strin
 
     if (cI.getRow() == -1 || cI.getCol() == -1) {
         //LINFO << "CellIndex (-1,-1) -> return a bad move";
-        return new CommandResult(false, ERROR, "Bad move: " + args[1] + "\n", true);
+        return new CommandResult(false, ERROR, "Bad move: " + args[1], true);
     }
 
     //LINFO << "Creating a new PlayRequest for move: " << moveToString;
@@ -55,7 +55,7 @@ CommandResult *PlayCommand::execute(ServerClient *sender, std::vector<std::strin
         model->playMove(req);
     } catch (exception &e) {
         //LINFO << "Error playing move: " << moveToString;
-        return new CommandResult(false, ERROR, "Error playing move\n", true);
+        return new CommandResult(false, ERROR, "Error playing move", true);
     }
     return new CommandResult(true, PLAY, "player_move", true);
 }

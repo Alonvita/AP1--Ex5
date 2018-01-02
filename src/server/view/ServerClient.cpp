@@ -56,7 +56,7 @@ void ServerClient::writeMessage(Message* msg) {
  * @param commandRes CommandResult -- a command result to send.
  */
 void ServerClient::sendCommandResult(CommandResult* commandRes) {
-    Message* msg = new Message(commandRes->getData(), (MessageType) COMMAND_RESULT);
+    Message* msg = new Message(commandRes->toString(), (MessageType) COMMAND_RESULT);
 
     writeMessage(msg);
 }

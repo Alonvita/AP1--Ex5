@@ -14,25 +14,46 @@
 #include <unistd.h>
 
 #include <string>
+#include "../display/Display.h"
 #include "../game/board/Cell.h"
+#include "../shared_data/Message.h"
 
-#define MAX_MESSAGE_SIZE 255
+#define MAX_MESSAGE_SIZE 512
+
+#define MESSAGE_TYPE_OFFSET 0
+#define MESSAGE_DATA_OFFSET 2
+#define NOTIFICATION_TYPE_OFFSET 0
+#define NOTIFICATION_DATA_OFFSET 2
+#define COMMAND_RESULT_SUCCESS_OFFSET 0
+#define COMMAND_RESULT_COMMAND_OFFSET 2
+#define COMMAND_RESULT_KEEPCOM_OFFSET 4
+#define COMMAND_RESULT_DATA_OFFSET 6
+
 
 class Client {
 public:
+    // initialization
     Client(std::string serverIP, int serverPort);
 
-    void        play();
-    void        connected();
-    void        writeCommandToServer();
-    bool        readUntil(std::string messageType);
-    bool        writeAndReadUntil(std::string messageType);
-    void        connectToServer();
-    void        getClientWelcomeMessage();
+    // server communication functions
+    void writeMessageToServer();
+
+    // message serialization
+    std::string serializeNotification(char *msg);
+    std::string serializeCommandResult(char *msg);
+    std::string serializeServerMessage(char *msg, MessageType *messageType);
+
+    std::string readTrafficUntilCommandResult();
+
+    // server connection functions
+    void connected();
+    void connectToServer();
+    void updateConnectionStatus();
 
 private:
     Cell color;
     bool myTurn;
+    bool stayConnected;
 
     int                 clientSocket;
     std::string         serverIP;
