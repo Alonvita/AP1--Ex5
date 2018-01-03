@@ -85,9 +85,9 @@ std::vector<std::string> ListGameContainer::listGames() {
     std::vector<std::string> listGames;
 
     if(games.empty()) {
-        listGames.push_back("There are no available games at the moment");
+        listGames.push_back("There are no available game at the moment");
     } else {
-        listGames.push_back("The available games names are:\n");
+        listGames.push_back("The available game are:\n");
     }
 
     for (unsigned i = 0; i < games.size(); ++i) {

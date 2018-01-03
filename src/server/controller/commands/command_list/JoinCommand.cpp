@@ -24,25 +24,23 @@ JoinCommand::JoinCommand(IModel *model) {
  */
 CommandResult *JoinCommand::execute(ServerClient *sender, std::vector<std::string> args) {
     if (args.size() != 2)
-        return new CommandResult(false, ERROR, "Usage: join + [name]", true);
+        return new CommandResult(false, ERROR, "Usage: join + [name]\n", true);
     //LINFO << "Executing JoinCommand for: " << sender->getSocket();
 
     if (model->isInGame(sender))
-        return new CommandResult(false, ERROR, "You are already inside a game...", true);
+        return new CommandResult(false, ERROR, "You are already inside a game...\n", true);
 
     if (!(model->gameExists(args[1])))
         return new CommandResult(false, ERROR, "A game is not available under this name: " + args[1] +
-                                               "\nmaybe it was started without you...", true);
+                                               "\nmaybe it was started without you...\n", true);
 
-    LINFO << "Creating a JoinRequest for: " << args[1];
     JoinRequest *req = new JoinRequest(sender, args[1]);
 
     try {
-        LINFO << "Joining game through model";
         model->joinGame(req);
     } catch (std::string &e) {
         return new CommandResult(false, ERROR, e, true);
     }
 
-    return new CommandResult(true, JOIN, "joined_game", true);
+    return new CommandResult(true, JOIN, "joined_game\n", true);
 }

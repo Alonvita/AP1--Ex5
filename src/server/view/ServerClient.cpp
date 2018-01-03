@@ -35,7 +35,6 @@ ServerClient::~ServerClient() {
  * @return the read message as string.
  */
 std::string ServerClient::readMessage() {
-    LINFO << "Reading from: " << clientSocket;
     if (!connected)
         std::runtime_error("ServerClient is not connected to a server.");
     // Local Variables
@@ -46,8 +45,6 @@ std::string ServerClient::readMessage() {
     }
 
     std::string str(msg);
-
-    LINFO << "Message read: " << str;
 
     return str;
 }

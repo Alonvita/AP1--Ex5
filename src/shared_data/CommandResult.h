@@ -21,8 +21,7 @@ typedef enum command {
 
 class CommandResult {
 public:
-    CommandResult(bool success, Command cmd, std::string payLoad, bool keepCon) :
-            success(success), command(cmd), data(payLoad), keepConnection(keepCon) {};
+    CommandResult(bool success, Command cmd, std::string payLoad, bool keepCon);
 
     // from and to string
     std::string     toString();

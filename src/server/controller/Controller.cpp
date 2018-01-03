@@ -67,7 +67,6 @@ CommandResult *Controller::executeCommand(string command, IClient *sender) {
         commandNameFromSet = commandSet[i].first;
         if (strcmp(commandNameFromSet.c_str(), commandName.c_str()) == 0) {
             cmd = commandSet[i].second;
-            //LINFO << "A command was found: " << commandSet[i].second;
             break;
         }
     }
@@ -75,13 +74,10 @@ CommandResult *Controller::executeCommand(string command, IClient *sender) {
 
     // command was not found
     if (cmd == nullptr) {
-        //LDEBUG << "Undefined command: " << command;
-        return new CommandResult(false, UNDEFINED, "Unknown Command", true);
+        return new CommandResult(false, UNDEFINED, "Unknown Command\n", true);
     }
 
-    //LINFO << "Trying to execute command: " << cmd;
     CommandResult *result = ((ServerCommand *) cmd)->execute((ServerClient *) sender, args);
-    //LINFO << commandName << " for: " << sender->getSocket() << " executed succesfuly";
 
     return result;
 }
@@ -100,14 +96,6 @@ void Controller::handleGameStarted(ReversiGame *rG) {
     for (unsigned long i = 0; i < size; ++i) {
         ReversiGamePlayer *player = ((ReversiGamePlayer *) (*clients)[i]);
         IClient *client1 = player->getClient();
-
-        // notify second player that he has joined the game
-        if (player->getColor() == BLACK) {
-            std::string msgBlackPlayer = "joined game\n";
-            msgBlackPlayer += rG->getBoard()->toString();
-
-            clientNotifier->notifyClient(player->getClient(), new Notification(msgBlackPlayer, GAME_STARTED));
-        }
 
         // notify first player that game has started
         if (player->getColor() == WHITE) {
@@ -184,6 +172,6 @@ void Controller::handlePlayerMoved(ReversiGame *rG, IClient *player, CellIndex c
         updateStringWithAMoves += rG->getAvailableMovesAsString();
 
         // notify opponent
-        clientNotifier->notifyClient(client1, new Notification(updateStringWithAMoves, PLAYER_MOVE));
+        clientNotifier->notifyClient(client1, new Notification(updateStringWithAMoves, UPDATE));
     }
 }

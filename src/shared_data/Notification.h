@@ -12,10 +12,11 @@
 #include "utility/StringSerializing.h"
 
 typedef enum Type {
-    BAD_COMMAND = -1,
+    BAD_COMMAND,
     GAME_STARTED,
     GAME_OVER,
-    PLAYER_MOVE
+    PLAYER_MOVE,
+    UPDATE
 } NotificationType;
 
 class Notification {

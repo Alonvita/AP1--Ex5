@@ -48,5 +48,5 @@ CommandResult* StartCommand::execute(ServerClient* sender, std::vector<std::stri
         return new CommandResult(false, ERROR, "Error starting game", true);
     }
 
-    return new CommandResult(true, START, "Your game was created, please wait for an opponent", true);
+    return new CommandResult(true, START, "Your game was created, please wait for an opponent\n", true);
 }

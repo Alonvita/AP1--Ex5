@@ -24,11 +24,10 @@ ListCommand::ListCommand(IModel* model) {
  */
 CommandResult* ListCommand::execute(ServerClient* sender, std::vector<std::string> args) {
     if(args.size() != 1)
-        return  new CommandResult(false, ERROR, "Usage: list", true);
-    //LINFO << "Executing ListCommand for: " << sender->getSocket();
+        return  new CommandResult(false, ERROR, "Usage: list\n", true);
 
     if(model->isInGame(sender))
-        return  new CommandResult(false, ERROR, "You are in a game!", true);
+        return  new CommandResult(false, ERROR, "You are in a game!\n", true);
 
     std::vector<std::string> gamesList = model->listGames();
     std::string commandsAsString;

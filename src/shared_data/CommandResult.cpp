@@ -5,6 +5,21 @@
 #include "CommandResult.h"
 
 /**
+ * CommandResult(bool success, Command cmd, std::string payLoad, bool keepCon).
+ *
+ * @param success bool -- true if Command succeeded, or false otherwise
+ * @param cmd Command -- the command type
+ * @param payLoad -- the date of this command
+ * @param keepCon bool -- false if communication should be stopped after this command execution.
+ */
+CommandResult::CommandResult(bool success, Command cmd, std::string payLoad, bool keepCon) {
+    this->success = success;
+    this->command = cmd;
+    this->data = payLoad;
+    this->keepConnection = keepCon;
+}
+
+/**
  * toString().
  *
  * @return a string representation of this CommandResult.
@@ -30,11 +45,11 @@ std::string CommandResult::toString() {
  *
  * @return a referense to a new CommandResult representing this string.
  */
-CommandResult* CommandResult::fromString(std::string str) {
+CommandResult *CommandResult::fromString(std::string str) {
 // Local Variables
     std::vector<std::string> splitStr = split(str, ' ');
-    CommandResult* msg = nullptr;
-    char* endP;
+    CommandResult *msg = nullptr;
+    char *endP;
 
     // get success
     bool success = (bool) strtol(splitStr[0].c_str(), &endP, 10);
@@ -64,7 +79,7 @@ CommandResult* CommandResult::fromString(std::string str) {
     // get keepConnection
     bool keepCon = (bool) strtol(splitStr[3].c_str(), &endP, 10);
 
-    if(cmdT == UNDEFINED)
+    if (cmdT == UNDEFINED)
         std::runtime_error("Bad notification type: " + cmdT);
 
     msg = new CommandResult(success, cmdT, splitStr[0], keepCon);
@@ -89,6 +104,7 @@ bool CommandResult::getKeepConnection() {
 bool CommandResult::getCommandSuccess() {
     return this->success;
 }
+
 /**
  * getType().
  *

@@ -4,8 +4,6 @@
 
 #include "Client.h"
 #include "../easy_logging/easylogging++.h"
-#include "../shared_data/Notification.h"
-#include "../shared_data/CommandResult.h"
 
 /**
  * Client(string serverIP, int serverPort) initializer.
@@ -60,6 +58,8 @@ void Client::connected() {
     std::string serverMessage;
     char msg[MAX_MESSAGE_SIZE] = {0};
     char dummy;
+    MessageType messageType;
+    bool skipWrite = false;
 
     // garbage collection from main.
     scanf("%c", &dummy);
@@ -68,12 +68,16 @@ void Client::connected() {
     read(clientSocket, msg, MAX_MESSAGE_SIZE);
     cout << msg;
 
+    memset(msg, 0, MAX_MESSAGE_SIZE);   // clear msg
+
     do {
-        // write
-        writeMessageToServer();
+        if (!skipWrite) {
+            // write
+            writeMessageToServer();
+        }
 
         // read server traffic
-        readMessageFromServer();
+        readMessageFromServer(&messageType, &skipWrite);
 
     } while (stayConnected);
 }
@@ -101,8 +105,83 @@ void Client::writeMessageToServer() {
 /**
  * readTrafficUntilCommandResult().
  */
-void Client::readMessageFromServer() {
+void Client::readMessageFromServer(MessageType *messageType, bool *skipWrite) {
     // Local Variables
+    char msg[MAX_MESSAGE_SIZE] = {0};
+
+    if(read(clientSocket, msg, MAX_MESSAGE_SIZE) < 0) {
+        cout << "Server shut down for unknown reason...";
+        exit (-1);
+    }
+
+    *messageType = (MessageType) (*(msg + MESSAGE_TYPE_OFFSET) - '0');
+
+    char *dataOffset = msg + MESSAGE_DATA_OFFSET;
+
+    // notification
+    if (*messageType == NOTIFICATION) {
+        *skipWrite = readNotification(dataOffset);
+        return;
+    }
+
+    // command result
+    if (*messageType == COMMAND_RESULT) {
+        *skipWrite = readCommandResult(dataOffset);
+        return;
+    }
+}
+
+/**
+ * readCommandResult().
+ */
+bool Client::readCommandResult(char *msgPtr) {
+    // Local Variables
+    bool skipRead = false;
+    bool keepCom = (bool) (*(msgPtr + COMMAND_RESULT_KEEPCOM_OFFSET) - '0');
+    Command cmd = (Command) (*(msgPtr + COMMAND_RESULT_COMMAND_OFFSET) - '0');
+
+    if (!keepCom)
+        updateConnectionStatus();
+
+    if (cmd == CLOSE || cmd == PLAY || cmd == JOIN || cmd == START) {
+        // explanation:
+        //  START -- wait for opponent to join
+        //  PLAY -- need to read update message
+        //  CLOSE -- doesn't matter really -> will break loop
+        //  JOIN -- wait for other player to make a move
+
+        skipRead = true;
+    }
+    // print "game started" message
+    msgPtr += COMMAND_RESULT_DATA_OFFSET;
+    std::cout << msgPtr;
+
+    return skipRead;
+}
+
+/**
+ * readNotification();
+ */
+bool Client::readNotification(char *msgPtr) {
+    // Local Variables
+    bool skipWrite = false;
+    NotificationType notificationType = (NotificationType) (*(msgPtr + NOTIFICATION_TYPE_OFFSET) - '0');
+
+    if (notificationType == GAME_OVER) {
+        updateConnectionStatus();
+    }
+
+    if(notificationType == PLAYER_MOVE)
+        skipWrite = true;
+
+    // joined game -- print message
+    msgPtr += NOTIFICATION_DATA_OFFSET;
+    std::cout << msgPtr;
+
+    return skipWrite;
+}
+
+/*// Local Variables
     char msg[MAX_MESSAGE_SIZE] = {0};
     char *msgPtr = msg;
     MessageType messageType;
@@ -118,9 +197,41 @@ void Client::readMessageFromServer() {
     // notification
     if(messageType == NOTIFICATION) {
         msgPtr += MESSAGE_DATA_OFFSET;
-        if((NotificationType) (*(msgPtr + NOTIFICATION_TYPE_OFFSET) - '0') == GAME_OVER)
+        NotificationType notificationType = (NotificationType) (*(msgPtr + NOTIFICATION_TYPE_OFFSET) - '0');
+
+        if(notificationType == GAME_OVER)
             updateConnectionStatus();
-        msgPtr += NOTIFICATION_DATA_OFFSET;
+
+        // get played notification -> read play cmd -> wait for other player to play -> return (ur turn)
+        if(notificationType == PLAYER_MOVE) {
+            // joined game -- print message
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+            std::cout << msgPtr;
+            return;
+        }
+
+        // started notif -> print -> print joined cmd -> return
+        if(notificationType == GAME_STARTED) {
+            // print "game started" message
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+            std::cout << msgPtr;
+
+            memset(msg, 0, MAX_MESSAGE_SIZE);   // clear msg
+            msgPtr = msg;
+
+            // wait for the other player to make a move...
+            if(read(clientSocket, msg, MAX_MESSAGE_SIZE) < 0) {
+                cout << "Server was closed for an unknown reason" << endl;
+                exit(-1);
+            }
+
+            msgPtr += MESSAGE_DATA_OFFSET;
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+
+            cout << msgPtr;
+            return;
+        }
+
     }
 
     // command result
@@ -132,17 +243,76 @@ void Client::readMessageFromServer() {
         if(!keepCom)
             updateConnectionStatus();
 
-        if(cmd == START) {
+        // print error received
+        if(cmd == ERROR || cmd == UNKNOWN_MESSAGE_TYPE || cmd == LIST) {
+            // print "game started" message
             msgPtr += COMMAND_RESULT_DATA_OFFSET;
             std::cout << msgPtr;
-            memset(msg, 0, MAX_MESSAGE_SIZE);           // clear msg
-            msgPtr = msg;
 
-            read(clientSocket, msg, MAX_MESSAGE_SIZE);  // read game started notif
-            msgPtr += MESSAGE_DATA_OFFSET;
-            msgPtr += NOTIFICATION_DATA_OFFSET;
+            return;
         }
 
-        cout << std::string(msgPtr);
-    }
-}
+        // print created -> wait for other client (read notification)-> return (make a move)
+        if(cmd == START) {
+            // print "game started" message
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+            std::cout << msgPtr;
+
+            memset(msg, 0, MAX_MESSAGE_SIZE);   // clear msg
+            msgPtr = msg;
+
+            // need to wait for another player
+            if(read(clientSocket, msg, MAX_MESSAGE_SIZE) < 0) {
+                cout << "Server was closed for an unknown reason" << endl;
+                exit(-1);
+            }
+
+            msgPtr += MESSAGE_DATA_OFFSET;
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+
+            cout << msgPtr;
+            return;
+        }
+
+        if(cmd == JOIN) {
+            // print "joined game" message
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+            std::cout << msgPtr;
+
+            memset(msg, 0, MAX_MESSAGE_SIZE);   // clear msg
+            msgPtr = msg;
+
+            // wait for other player's move
+            if(read(clientSocket, msg, MAX_MESSAGE_SIZE) < 0) {
+                cout << "Server was closed for an unknown reason" << endl;
+                exit(-1);
+            }
+
+            msgPtr += MESSAGE_DATA_OFFSET;
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+
+            cout << msgPtr;
+            return;
+        }
+
+        if(cmd == PLAY) {
+            // print "joined game" message
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+            std::cout << msgPtr;
+
+            memset(msg, 0, MAX_MESSAGE_SIZE);   // clear msg
+            msgPtr = msg;
+
+            // wait for other player's move
+            if(read(clientSocket, msg, MAX_MESSAGE_SIZE) < 0) {
+                cout << "Server was closed for an unknown reason" << endl;
+                exit(-1);
+            }
+
+            msgPtr += MESSAGE_DATA_OFFSET;
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+
+            cout << msgPtr;
+            return;
+        }
+    }*/

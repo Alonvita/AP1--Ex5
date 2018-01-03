@@ -18,6 +18,7 @@
 #include "../game/board/Cell.h"
 #include "../shared_data/Message.h"
 #include "../shared_data/Notification.h"
+#include "../shared_data/CommandResult.h"
 
 #define MAX_MESSAGE_SIZE 1024
 
@@ -38,7 +39,10 @@ public:
 
     // server communication functions
     void writeMessageToServer();
-    void readMessageFromServer();
+    bool readCommandResult(char* msgPtr);
+    bool readNotification(char* msgPtr);
+    void readMessageFromServer(MessageType* messageType, bool *skipWrite);
+
 
     // server connection functions
     void connected();

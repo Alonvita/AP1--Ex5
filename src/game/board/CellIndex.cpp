@@ -74,5 +74,7 @@ void CellIndex::fromString(std::string str) {
         row = col = -1;
 
     row = (strToChars[0] - '0');
+    row--;
     col = (strToChars[2] - '0');
+    col --;
 }

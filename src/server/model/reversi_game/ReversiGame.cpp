@@ -203,29 +203,30 @@ void ReversiGame::closeGame(IClient* client) {
 void ReversiGame::playMove(IClient* client, CellIndex cI) {
     LINFO << "Playing move by: " << client->getSocket();
     if(!started)
-        EXCEPTION("Game has NOT started yet!");
-
+        EXCEPTION("Game has NOT started yet!\n");
 
     if(finished)
-        EXCEPTION("Game is already over!");
+        EXCEPTION("Game is already over!\n");
 
     if(!legalMove(cI))
-        EXCEPTION("Illegal Move");
+        EXCEPTION("Illegal Move\n");
 
     LINFO << "Move by: " << client->getSocket() << " is legal";
 
     ReversiGamePlayer* player = getPlayerByClient(client);
 
     if(player->getColor() != turnsManager->getCurrentPlayerColor())
-        EXCEPTION("This is NOT your turn");
+        EXCEPTION("This is NOT your turn\n");
 
     this->gameBoard->moveMade(cI, player->getColor());
 
     checkWin(player);
 
     // game continues - evaluate moves and pass the turn
-    this->turnsManager->evaluateAvailableMovesForThisTurn(gameBoard);
     this->turnsManager->endTurn();
+    this->turnsManager->evaluateAvailableMovesForThisTurn(gameBoard);
+
+    LINFO << "Player turn color is: " << (turnsManager->getCurrentPlayerColor() == 1 ? "BLACK" : "WHITE");
 
     // update players that a move has been made
     PLAYER_MOVED_EVENT(this, client, cI);
@@ -259,7 +260,6 @@ void ReversiGame::checkWin(ReversiGamePlayer* player) {
         // player won the game
         finish(player);
     }
-
 }
 
 /**

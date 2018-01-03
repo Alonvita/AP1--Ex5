@@ -114,7 +114,7 @@ void TurnsManager::evaluateAvailableMovesForThisTurn(Board *gb) {
     //clear last turn's availableMoves, get new moves and shrink
     availableMoves.clear();
     availableMoves =
-            MovesEvaluator::evaluateAvailableMoves(gb, (Cell) playerTurn);
+            MovesEvaluator::evaluateAvailableMoves(gb, (Cell) (playerTurn));
 }
 
 /**

@@ -15,9 +15,9 @@ std::string MoveUpdate::toString() {
     moveAsString = "[" + gameName + "], ";
     moveAsString += "a move was made: ";
     moveAsString += "(";
-    moveAsString += intToString(cI.getRow());
+    moveAsString += intToString(cI.getRow() + 1);
     moveAsString += ",";
-    moveAsString += intToString(cI.getCol());
+    moveAsString += intToString(cI.getCol() + 1);
     moveAsString += ")";
 
     return moveAsString;
