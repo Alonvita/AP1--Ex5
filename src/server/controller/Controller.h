@@ -41,11 +41,8 @@ public:
 
     // Interface Mandatory Functions
     void handleGameStarted(ReversiGame* rG);
-    void handleException(std::string str, IClient *player);
-    void handleIllegalMove(ReversiGame *rG, IClient *player);
     void handleGameOver(ReversiGame* rG, GameOverEventArgs* args);
     void handlePlayerMoved(ReversiGame* rG, IClient* player, CellIndex cI);
-    void notifyAvailableMoves(ReversiGame *rG, ServerClient *player);
 
 private:
     // Local Class Variables

@@ -8,7 +8,7 @@
 #include <string>
 
 typedef enum mType {
-    UNKNOWN_MESSAGE_TYPE = -1,
+    UNKNOWN_MESSAGE_TYPE,
     COMMAND_RESULT,
     NOTIFICATION
 } MessageType;

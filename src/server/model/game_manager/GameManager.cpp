@@ -72,27 +72,6 @@ void GameManager::handlePlayerMoved(ReversiGame* game, IClient* player, CellInde
 }
 
 /**
- * handlePlayerMoved(ReversiGame* game, IClient player, CellIndex cI).
- *
- * @param game ReversiGame* -- a reference to the game the illegal move was
- *                              made on
- * @param player IClient* -- a client type.
- */
-void GameManager::handleIllegalMove(ReversiGame *game, IClient *player) {
-    this->handler->handleIllegalMove(game, player);
-}
-
-/**
- * handleException (std::string exception, IClient *player).
- *
- * @param exception std::string -- a string representing the problem
- * @param player IClient -- a client type to notify.
- */
-void GameManager::handleException (std::string exception, IClient *player) {
-    this->handler->handleException(exception, player);
-}
-
-/**
  * addGame(Game game).
  * @param game Game -- a game to add to container.
  */

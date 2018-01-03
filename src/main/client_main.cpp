@@ -27,7 +27,7 @@ int main() {
 
     printStartingMessage();
 
-    cin >> gameType;
+    scanf(" %d", &gameType);
 
     if (gameType == 3) {
         Client client("127.0.0.1", 8000);

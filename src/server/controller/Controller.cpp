@@ -93,48 +93,30 @@ CommandResult *Controller::executeCommand(string command, IClient *sender) {
  * @param rG ReversiGame* -- a reference to reversi game
  */
 void Controller::handleGameStarted(ReversiGame *rG) {
-    //LINFO << "Handling game started";
-    Notification *notif =
-            new Notification(rG->getBoard()->toString(), GAME_STARTED);
+    // Local Vriables
     std::vector<ReversiGamePlayer *> *clients = rG->getAllClients();
-
     unsigned long size = clients->size();
 
     for (unsigned long i = 0; i < size; ++i) {
         ReversiGamePlayer *player = ((ReversiGamePlayer *) (*clients)[i]);
         IClient *client1 = player->getClient();
-        //LINFO << "Checking player: " << client1->getSocket() << " color: " << player->getColor();
 
         // notify second player that he has joined the game
         if (player->getColor() == BLACK) {
-            //LINFO << "Color of " << client1->getSocket() << " is BLACK" << " - sending him \'joined_game\' notif";
-            Notification *joinedGameNotif = new Notification("joined_game", GAME_STARTED);
+            std::string msgBlackPlayer = "joined game\n";
+            msgBlackPlayer += rG->getBoard()->toString();
 
-            clientNotifier->notifyClient(client1, joinedGameNotif);
-
-            //send board
-            clientNotifier->notifyClient(client1, notif);
+            clientNotifier->notifyClient(player->getClient(), new Notification(msgBlackPlayer, GAME_STARTED));
         }
 
         // notify first player that game has started
         if (player->getColor() == WHITE) {
-            //LINFO << "Color of " << client1->getSocket() << " is WHITE" << " - sending him \'game started\' notif";
-            Notification *gameStartedNotif =
-                    new Notification("Your game has started!", GAME_STARTED);
+            std::string msgWhitePlayer = "Some one has entered your game!\n";
+            msgWhitePlayer += rG->getBoard()->toString() + "\n";
+            msgWhitePlayer += rG->getAvailableMovesAsString();
 
-            //LINFO << "Notifying player with his game started noification";
-            // notify
-            clientNotifier->notifyClient(client1, gameStartedNotif);
-
-            //LINFO << "Notifying player with board";
-            // send board
-            clientNotifier->notifyClient(client1, notif);
-
-            //LINFO << "Notifying player with available moves";
-            // notify with available moves
-            notifyAvailableMoves(rG, ((ServerClient *) client1));
+            clientNotifier->notifyClient(client1, new Notification(msgWhitePlayer, GAME_STARTED));
         }
-        //LINFO << "Loop ended for " << client1->getSocket() << ", " << player->getColor();
     }
 }
 
@@ -159,7 +141,6 @@ void Controller::handleGameOver(ReversiGame *rG, GameOverEventArgs *args) {
         if (winner == nullptr) {
             message = "game_closed";
         } else {
-            //LINFO << "The game " << rG->getName() << " has ended: ";
             message =
                     client1->getSocket() ==
                     winner->getSocket() ? "You Win!\n" : "You Lost!\n";
@@ -178,14 +159,14 @@ void Controller::handleGameOver(ReversiGame *rG, GameOverEventArgs *args) {
  * @param cI CellIndex -- the move made
  */
 void Controller::handlePlayerMoved(ReversiGame *rG, IClient *player, CellIndex cI) {
-    LINFO << "Handling move made by: " << player->getSocket();
     // Local Variables
     MoveUpdate *update = new MoveUpdate(rG->getName(), cI);
-    Notification *updateNotif = new Notification(update->toString(), PLAYER_MOVE);
-    Notification *boardNotif =
-            new Notification(rG->getBoard()->toString(), GAME_STARTED);
     std::vector<ReversiGamePlayer *> *clients = rG->getAllClients();
 
+    // make the update notification
+    std::string updateString = update->toString() + "\n" + rG->getBoard()->toString();
+
+    // notify clients
     for (unsigned i = 0; i < clients->size(); ++i) {
         // inner loop variables
         std::string message;
@@ -193,75 +174,16 @@ void Controller::handlePlayerMoved(ReversiGame *rG, IClient *player, CellIndex c
         ServerClient *client1 = (ServerClient *) player1->getClient();
 
         if (client1->getSocket() == ((ServerClient *) player)->getSocket()) {
-            // send the board as a message
-            clientNotifier->notifyClient(client1, updateNotif);
-            clientNotifier->notifyClient(client1, boardNotif);
+            // notify player
+            clientNotifier->notifyClient(client1, new Notification(updateString, PLAYER_MOVE));
             continue;
         }
 
-        //LINFO << "Notifying: " << client1->getSocket() << " with board update -> this player did NOT make the move";
+        // add available moves to board message
+        std::string updateStringWithAMoves = updateString + "\n";
+        updateStringWithAMoves += rG->getAvailableMovesAsString();
 
-        // notify the other client with the move made
-        clientNotifier->notifyClient(client1, updateNotif);
-
-        // notify with board update
-        clientNotifier->notifyClient(client1, boardNotif);
-
-        // notify the other client with available moves
-        notifyAvailableMoves(rG, client1);
+        // notify opponent
+        clientNotifier->notifyClient(client1, new Notification(updateStringWithAMoves, PLAYER_MOVE));
     }
-}
-
-/**
- * notifyAvailableMoves(ReversiGame *rG, IClient *player).
- * @param rG ReversiGame* -- a referense to the game the player is playing on
- * @param player IClient -- a client to notify.
- */
-void Controller::notifyAvailableMoves(ReversiGame *rG, ServerClient *client) {
-    std::vector<CellIndex> availableMoves = rG->getAvailableMoves();
-    std::string availableMovesStr = "Your available moves for this turn are:\n";
-    unsigned long size = availableMoves.size();
-
-    for (unsigned long i = 0; i < size; ++i) {
-        if (i == size - 1) {
-            availableMovesStr += availableMoves[i].toString();
-            availableMovesStr += "\n";
-            continue;
-        }
-
-        availableMovesStr += availableMoves[i].toString() + ", ";
-    }
-
-    //LINFO << "AvailableMovesStr";
-    Notification *notif = new Notification(availableMovesStr, PLAYER_MOVE);
-    clientNotifier->notifyClient(client, notif);
-
-    //player will be notified with "available_moves" from command
-}
-
-/**
- * handleIllegalMove(ReversiGame *rG, IClient *player).
- *
- * @param rG ReversiGame* -- a reference to the game this illegal move was
- *                              made on.
- * @param player IClient -- the player that made this move.
- */
-void Controller::handleIllegalMove(ReversiGame *rG, IClient *player) {
-    //LINFO << "Handling illegal move";
-    // Local Variables
-    Notification *notif = new Notification("illegal_move", PLAYER_MOVE);
-
-    clientNotifier->notifyClient(((ServerClient *) player), notif);
-}
-
-/**
- * handleException()
- */
-void Controller::handleException(std::string exception, IClient *player) {
-    //LINFO << "Handling Exception";
-    // Local Variables
-    Notification *notif = new Notification(exception, PLAYER_MOVE);
-
-
-    clientNotifier->notifyClient(((ServerClient *) player), notif);
 }

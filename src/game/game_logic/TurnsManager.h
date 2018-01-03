@@ -44,6 +44,7 @@ public:
     int	                getAvailableMovesNum();
     Cell				getCurrentPlayerColor();
     vector<CellIndex>   getAvailableMoves();
+    std::string         getAvailableMovesAsString();
 
     // Utility
     void 				endTurn();

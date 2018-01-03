@@ -17,8 +17,9 @@
 #include "../display/Display.h"
 #include "../game/board/Cell.h"
 #include "../shared_data/Message.h"
+#include "../shared_data/Notification.h"
 
-#define MAX_MESSAGE_SIZE 512
+#define MAX_MESSAGE_SIZE 1024
 
 #define MESSAGE_TYPE_OFFSET 0
 #define MESSAGE_DATA_OFFSET 2
@@ -37,13 +38,7 @@ public:
 
     // server communication functions
     void writeMessageToServer();
-
-    // message serialization
-    std::string serializeNotification(char *msg);
-    std::string serializeCommandResult(char *msg);
-    std::string serializeServerMessage(char *msg, MessageType *messageType);
-
-    std::string readTrafficUntilCommandResult();
+    void readMessageFromServer();
 
     // server connection functions
     void connected();

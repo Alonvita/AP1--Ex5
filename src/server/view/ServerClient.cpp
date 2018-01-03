@@ -13,6 +13,23 @@
 #include "../../easy_logging/easylogging++.h"
 
 /**
+ * ServerClient(int clientSocket).
+ * @param clientSocket int -- client socket
+ */
+ServerClient::ServerClient(int clientSocket) {
+    this->clientSocket = clientSocket;
+    this->connected = true;
+    pthread_mutex_init(&this->mutex, 0);
+}
+
+/**
+ * ~ServerClient().
+ */
+ServerClient::~ServerClient() {
+    pthread_mutex_destroy(&this->mutex);
+}
+
+/**
  * readMessage().
  *
  * @return the read message as string.
@@ -39,15 +56,15 @@ std::string ServerClient::readMessage() {
  * writeMessage().
  *
  */
-void ServerClient::writeMessage(Message* msg) {
-    if(!connected)
+void ServerClient::writeMessage(Message *msg) {
+    pthread_mutex_lock(&this->mutex);
+    if (!connected)
         std::runtime_error("ServerClient is not connected to a server.");
 
-    LINFO << "Sending message to client: " << clientSocket;
     // write message to server
     std::string message = msg->toString();
     write(clientSocket, message.c_str(), message.length() + 1);
-    LINFO << "done Sending message to client: " << clientSocket;
+    pthread_mutex_unlock(&this->mutex);
 }
 
 /**
@@ -55,8 +72,8 @@ void ServerClient::writeMessage(Message* msg) {
  *
  * @param commandRes CommandResult -- a command result to send.
  */
-void ServerClient::sendCommandResult(CommandResult* commandRes) {
-    Message* msg = new Message(commandRes->toString(), (MessageType) COMMAND_RESULT);
+void ServerClient::sendCommandResult(CommandResult *commandRes) {
+    Message *msg = new Message(commandRes->toString(), (MessageType) COMMAND_RESULT);
 
     writeMessage(msg);
 }
@@ -65,8 +82,8 @@ void ServerClient::sendCommandResult(CommandResult* commandRes) {
  * sendNotification(Notification* notif).
  * @param notif Notification* -- a reference to the notification.
  */
-void ServerClient::sendNotification(Notification* notif) {
-    Message* msg = new Message(notif->toString(), (MessageType) NOTIFICATION);
+void ServerClient::sendNotification(Notification *notif) {
+    Message *msg = new Message(notif->toString(), (MessageType) NOTIFICATION);
 
     writeMessage(msg);
 }
@@ -104,8 +121,8 @@ void ServerClient::connectionStatusChange(bool status) {
  * @param other ServerClient* -- another server client
  * @return true if this and other are equal in FD or false otherwise
  */
-bool ServerClient::equals(ServerClient* other) {
-    if(other == nullptr)
+bool ServerClient::equals(ServerClient *other) {
+    if (other == nullptr)
         return false;
     return this->clientSocket == other->getSocket();
 }

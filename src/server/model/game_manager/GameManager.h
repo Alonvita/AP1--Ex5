@@ -15,8 +15,6 @@ public:
     void handleGameStarted  (ReversiGame *game);
     void handleGameOver     (ReversiGame *game, GameOverEventArgs *args);
     void handlePlayerMoved  (ReversiGame *game, IClient* player, CellIndex cI);
-    void handleIllegalMove  (ReversiGame *game, IClient *player);
-    void handleException    (std::string exception, IClient *player);
 
     // handling
     void attachHandlers     (ReversiGame *game);

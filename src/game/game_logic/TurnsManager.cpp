@@ -69,6 +69,29 @@ Cell TurnsManager::getCurrentPlayerColor() {
     return ((Cell) this->playerTurn);
 }
 
+/**
+ * getAvailableMovesAsString().
+ *
+ * @return a string representing the available moves for this turn
+ */
+std::string TurnsManager::getAvailableMovesAsString() {
+    // Local Variables
+    std::string availableMovesStr = "The available moves for this turn are: \n";
+    unsigned long size = availableMoves.size();
+
+    for (unsigned long i = 0; i < size; ++i) {
+        if (i == size - 1) {
+            availableMovesStr += availableMoves[i].toString();
+            availableMovesStr += "\n";
+            continue;
+        }
+
+        availableMovesStr += availableMoves[i].toString() + ", ";
+    }
+
+    return availableMovesStr;
+}
+
 //----------Public Functions----------
 /**
  * endTurn().

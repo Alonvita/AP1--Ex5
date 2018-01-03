@@ -10,7 +10,7 @@
 #include "utility/StringSerializing.h"
 
 typedef enum command {
-    UNDEFINED = -1,
+    UNDEFINED,
     LIST,
     JOIN,
     PLAY,

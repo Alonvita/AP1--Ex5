@@ -70,6 +70,15 @@ std::vector<CellIndex> ReversiGame::getAvailableMoves() {
 }
 
 /**
+ * getAvailableMovesAsString().
+ *
+ * @return the available moves for this turn as std::string
+ */
+std::string ReversiGame::getAvailableMovesAsString() {
+    return this->turnsManager->getAvailableMovesAsString();
+}
+
+/**
  * getStarted().
  *
  * @return true if game has started, or false otherwise
@@ -191,31 +200,24 @@ void ReversiGame::closeGame(IClient* client) {
  * @param cI CellIndex -- a move to make.
  * @return false in case of an exception throw
  */
-bool ReversiGame::playMove(IClient* client, CellIndex cI) {
+void ReversiGame::playMove(IClient* client, CellIndex cI) {
     LINFO << "Playing move by: " << client->getSocket();
-    if(!started) {
-        EXCEPTION("Game has NOT started yet!", client);
-        return false;
-    }
+    if(!started)
+        EXCEPTION("Game has NOT started yet!");
 
-    if(finished) {
-        EXCEPTION("Game is already over!", client);
-        return false;
-    }
 
-    if(!legalMove(cI)) {
-        PLAYER_ILLEGAL_MOVE(this, client);
-        return false;
-    }
+    if(finished)
+        EXCEPTION("Game is already over!");
+
+    if(!legalMove(cI))
+        EXCEPTION("Illegal Move");
 
     LINFO << "Move by: " << client->getSocket() << " is legal";
 
     ReversiGamePlayer* player = getPlayerByClient(client);
 
-    if(player->getColor() != turnsManager->getCurrentPlayerColor()) {
-        EXCEPTION("This is NOT your turn!", client);
-        return false;
-    }
+    if(player->getColor() != turnsManager->getCurrentPlayerColor())
+        EXCEPTION("This is NOT your turn");
 
     this->gameBoard->moveMade(cI, player->getColor());
 
@@ -227,7 +229,6 @@ bool ReversiGame::playMove(IClient* client, CellIndex cI) {
 
     // update players that a move has been made
     PLAYER_MOVED_EVENT(this, client, cI);
-    return true;
 }
 
 /**

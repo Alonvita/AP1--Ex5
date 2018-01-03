@@ -58,25 +58,22 @@ void Client::connectToServer() {
 void Client::connected() {
     // Local Variables
     std::string serverMessage;
-    char dummy;
     char msg[MAX_MESSAGE_SIZE] = {0};
+    char dummy;
 
-    // read ad print server instructions
+    // garbage collection from main.
+    scanf("%c", &dummy);
+
+    // read and print server instructions
     read(clientSocket, msg, MAX_MESSAGE_SIZE);
     cout << msg;
-
-    // scan the \n from main menu
-    scanf("%c", &dummy);
 
     do {
         // write
         writeMessageToServer();
 
         // read server traffic
-        serverMessage = readTrafficUntilCommandResult();
-
-        // print message
-        cout << serverMessage << endl;
+        readMessageFromServer();
 
     } while (stayConnected);
 }
@@ -88,7 +85,6 @@ void Client::writeMessageToServer() {
     // Local Variables
     char msg[MAX_MESSAGE_SIZE] = {0};
     std::string str;
-
 
     // write command to socket
     cout << "Enter a command\n";
@@ -104,87 +100,49 @@ void Client::writeMessageToServer() {
 
 /**
  * readTrafficUntilCommandResult().
- *
- * @return the command result as a string
  */
-std::string Client::readTrafficUntilCommandResult() {
+void Client::readMessageFromServer() {
     // Local Variables
     char msg[MAX_MESSAGE_SIZE] = {0};
-    std::string serverMessage;
-    MessageType messageType = UNKNOWN_MESSAGE_TYPE;
+    char *msgPtr = msg;
+    MessageType messageType;
 
-    do {
-        // read a message from server
-        if (read(clientSocket, msg, MAX_MESSAGE_SIZE) < 0) {
-            cout << "Server was closed for an unknown reason";
-            exit(-1);
+    // read a message from server
+    if (read(clientSocket, msg, MAX_MESSAGE_SIZE) < 0) {
+        cout << "Server was closed for an unknown reason";
+        exit(-1);
+    }
+
+    messageType = (MessageType) (*(msgPtr + MESSAGE_TYPE_OFFSET) - '0');
+
+    // notification
+    if(messageType == NOTIFICATION) {
+        msgPtr += MESSAGE_DATA_OFFSET;
+        if((NotificationType) (*(msgPtr + NOTIFICATION_TYPE_OFFSET) - '0') == GAME_OVER)
+            updateConnectionStatus();
+        msgPtr += NOTIFICATION_DATA_OFFSET;
+    }
+
+    // command result
+    if(messageType == COMMAND_RESULT) {
+        msgPtr += MESSAGE_DATA_OFFSET;
+        bool keepCom = (bool) (*(msgPtr + COMMAND_RESULT_KEEPCOM_OFFSET) - '0');
+        Command cmd = (Command) (*(msgPtr + COMMAND_RESULT_COMMAND_OFFSET) - '0');
+
+        if(!keepCom)
+            updateConnectionStatus();
+
+        if(cmd == START) {
+            msgPtr += COMMAND_RESULT_DATA_OFFSET;
+            std::cout << msgPtr;
+            memset(msg, 0, MAX_MESSAGE_SIZE);           // clear msg
+            msgPtr = msg;
+
+            read(clientSocket, msg, MAX_MESSAGE_SIZE);  // read game started notif
+            msgPtr += MESSAGE_DATA_OFFSET;
+            msgPtr += NOTIFICATION_DATA_OFFSET;
         }
 
-        serverMessage = serializeServerMessage(msg, &messageType);
-    } while (messageType != COMMAND_RESULT);
-
-    // return the message serialized
-    return serverMessage;
-}
-
-/**
- * serializeServerMessage(char *msg, MessageType *messageType).
- * @param msg *char -- an array of chars, assumes initialized.
- * @param messageType *MessageType -- a reference to MessageType type to update.
- *
- * @return the serialized message as a std::string
- */
-std::string Client::serializeServerMessage(char msg[MAX_MESSAGE_SIZE], MessageType *messageType) {
-    // check message type
-    if (*(msg + MESSAGE_TYPE_OFFSET) - '0' == UNKNOWN_MESSAGE_TYPE) {
-        *messageType = UNKNOWN_MESSAGE_TYPE;
+        cout << std::string(msgPtr);
     }
-
-    if (*(msg + MESSAGE_TYPE_OFFSET) - '0' == NOTIFICATION) {
-        *messageType = NOTIFICATION;
-        return serializeNotification(msg + MESSAGE_DATA_OFFSET);
-    }
-
-    if (*(msg + MESSAGE_TYPE_OFFSET) - '0' == COMMAND_RESULT) {
-        *messageType = COMMAND_RESULT;
-        return serializeCommandResult(msg + MESSAGE_DATA_OFFSET);
-    }
-}
-
-/**
- * notificationReceived(char msg[MAX_MESSAGE_SIZE]).
- * @param msg *char -- an array of chars, assumes initalized.
- *
- * @return the serialized Notification as a std::string
- */
-std::string Client::serializeNotification(char *msg) {
-    // Local Variables
-    NotificationType notificationType = (NotificationType) (*(msg + NOTIFICATION_TYPE_OFFSET) - '0');
-
-    if (notificationType == GAME_OVER)
-        updateConnectionStatus();
-
-    // point msg to the beginning of the Notifications data
-    msg = msg + NOTIFICATION_DATA_OFFSET;
-
-    return std::string(msg);
-}
-
-/**
- * commandResultReceived(char msg[MAX_MESSAGE_SIZE]).
- * @param msg *char -- an array of chars, assumes initalized.
- * @ returns the serialized CommandResult as a std::string
- */
-std::string Client::serializeCommandResult(char *msg) {
-    bool success = (bool) (*(msg + COMMAND_RESULT_SUCCESS_OFFSET) - '0');
-    Command command = (Command) (*(msg + COMMAND_RESULT_COMMAND_OFFSET) - '0');
-
-    if (!((bool) ((msg + COMMAND_RESULT_KEEPCOM_OFFSET) - '0'))) {
-        updateConnectionStatus();
-    }
-
-    // point msg to the beginning of the CommandResult data
-    msg = msg + COMMAND_RESULT_DATA_OFFSET;
-
-    return std::string(msg);
 }

@@ -10,7 +10,7 @@
  *
  * @param model IModel -- a game model type.
  */
-JoinCommand::JoinCommand(IModel* model) {
+JoinCommand::JoinCommand(IModel *model) {
     this->model = model;
 }
 
@@ -22,27 +22,26 @@ JoinCommand::JoinCommand(IModel* model) {
  *
  * @return a reference the a new CommandResult to the command given.
  */
-CommandResult* JoinCommand::execute(ServerClient* sender, std::vector<std::string> args) {
-    if(args.size() != 2)
-        return  new CommandResult(false, ERROR, "Usage: join + [name]", true);
+CommandResult *JoinCommand::execute(ServerClient *sender, std::vector<std::string> args) {
+    if (args.size() != 2)
+        return new CommandResult(false, ERROR, "Usage: join + [name]", true);
     //LINFO << "Executing JoinCommand for: " << sender->getSocket();
 
-    if(model->isInGame(sender))
-        return  new CommandResult(false, ERROR, "You are already inside a game...", true);
+    if (model->isInGame(sender))
+        return new CommandResult(false, ERROR, "You are already inside a game...", true);
 
-    if(!(model->gameExists(args[1])))
-        return  new CommandResult(false, ERROR, "A game is not available under this name: " + args[1] +
-                                                "\nmaybe it was started without you...", true);
+    if (!(model->gameExists(args[1])))
+        return new CommandResult(false, ERROR, "A game is not available under this name: " + args[1] +
+                                               "\nmaybe it was started without you...", true);
 
     LINFO << "Creating a JoinRequest for: " << args[1];
-    JoinRequest* req = new JoinRequest(sender, args[1]);
+    JoinRequest *req = new JoinRequest(sender, args[1]);
 
     try {
         LINFO << "Joining game through model";
         model->joinGame(req);
-    } catch (exception& e) {
-        LINFO << "Error while joining game through model";
-        return new CommandResult(false, ERROR, "Error joining game", true);
+    } catch (std::string &e) {
+        return new CommandResult(false, ERROR, e, true);
     }
 
     return new CommandResult(true, JOIN, "joined_game", true);

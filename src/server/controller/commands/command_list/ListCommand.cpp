@@ -22,8 +22,7 @@ ListCommand::ListCommand(IModel* model) {
  *
  * @return a reference the a new CommandResult to the command given.
  */
-CommandResult* ListCommand::execute(
-        ServerClient* sender, std::vector<std::string> args) {
+CommandResult* ListCommand::execute(ServerClient* sender, std::vector<std::string> args) {
     if(args.size() != 1)
         return  new CommandResult(false, ERROR, "Usage: list", true);
     //LINFO << "Executing ListCommand for: " << sender->getSocket();

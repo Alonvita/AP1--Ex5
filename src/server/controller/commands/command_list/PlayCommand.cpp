@@ -53,9 +53,9 @@ CommandResult *PlayCommand::execute(ServerClient *sender, std::vector<std::strin
     try {
         //LINFO << "Playing: " << moveToString << " on model";
         model->playMove(req);
-    } catch (exception &e) {
+    } catch (std::string &e) {
         //LINFO << "Error playing move: " << moveToString;
-        return new CommandResult(false, ERROR, "Error playing move", true);
+        return new CommandResult(false, ERROR, e, true);
     }
 
     return new CommandResult(true, PLAY, "player_move", true);

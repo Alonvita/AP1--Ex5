@@ -24,11 +24,10 @@
 class ServerClient : public IClient {
 public:
     // Initializer
-    ServerClient(int clientSocket) :
-            clientSocket(clientSocket), connected(true) {};
+    ServerClient(int clientSocket);
 
     // Destruct
-    ~ServerClient() {}
+    ~ServerClient();
 
     //----------PUBLIC FUNCTIONS----------
     // Getters & Setters
@@ -52,9 +51,11 @@ public:
 private:
     // Server Related
     int clientSocket;
+    pthread_mutex_t mutex;
 
     // Game Related
     bool connected;
+
 };
 
 #endif //AP1_EX3_CLIENT_H

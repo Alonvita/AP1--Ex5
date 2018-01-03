@@ -17,10 +17,8 @@ public:
     ~IGameEventHandler() {}
 
     virtual void handleGameStarted  (ReversiGame* game) = 0;
-    virtual void handleIllegalMove  (ReversiGame* game, IClient* player) = 0;
     virtual void handleGameOver     (ReversiGame* game, GameOverEventArgs* args) = 0;
     virtual void handlePlayerMoved  (ReversiGame* game, IClient* player, CellIndex cI) = 0;
-    virtual void handleException    (std::string exception, IClient *player) = 0;
 };
 
 #endif //AP1_EX3_IGAMEEVENTHANDLER_H
