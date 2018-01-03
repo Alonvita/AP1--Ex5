@@ -167,9 +167,8 @@ bool Client::readNotification(char *msgPtr) {
     bool skipWrite = false;
     NotificationType notificationType = (NotificationType) (*(msgPtr + NOTIFICATION_TYPE_OFFSET) - '0');
 
-    if (notificationType == GAME_OVER) {
+    if (notificationType == GAME_OVER)
         updateConnectionStatus();
-    }
 
     if(notificationType == PLAYER_MOVE)
         skipWrite = true;

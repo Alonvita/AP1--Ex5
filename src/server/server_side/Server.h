@@ -24,6 +24,7 @@
 #include "../../game/game_flow/Reversi.h"
 #include "../../server/thread_pool/ThreadPool.h"
 #include "../view/ClientHandler.h"
+#include "../thread_pool/tasks/ServerTask.h"
 
 
 //----------DEFINITIONS----------
@@ -45,13 +46,9 @@ protected:
 
 private:
     // Local Class Variables
-    int port;
-    int serverSocket;
+    int         port;
+    int         serverSocket;
     ThreadPool* threadPool;
-
-    //---------- PRIVATE FUNCTIONS ----------
-    int         clientConnected();
-    void        writeClientOptions(int clientSocket);
 };
 
 

@@ -29,10 +29,6 @@ void Model::createGame(StartRequest* request) {
     // add handler to the game
     game->addHandler(
             ((GameManager*)gameManager)->getHandler());
-
-    LINFO << "Game was created: " << game->getName()
-          << "\tPlayer: " << request->getClient()->getSocket()
-          << " was added to the game";
 }
 
 /**

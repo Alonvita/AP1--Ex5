@@ -36,3 +36,5 @@ clean:
 	$(RM) *.o
 	$(RM) sources.txt
 	$(RM) compile.txt
+	$(RM) server.out
+	$(RM) client.out

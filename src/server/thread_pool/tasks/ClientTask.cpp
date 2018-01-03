@@ -20,11 +20,8 @@ void ClientTask::run() {
         bool keepCom = true;
         do {
             string command = client->readMessage();
-
             CommandResult* result = controller->executeCommand(command, client);
-
             keepCom = result->getKeepConnection();
-
             client->sendCommandResult(result);
 
 

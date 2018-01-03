@@ -19,9 +19,7 @@ ClientHandler::ClientHandler() {
  * @param client Client -- a client.
  */
 void ClientHandler::handleClient(IClient* client) {
-    LINFO <<"Creating a client task for " << client->getSocket();
     createClientTask(client);
-    LINFO <<"DONE Creating a client task for " << client->getSocket();
 }
 
 /**
@@ -32,7 +30,6 @@ void ClientHandler::handleClient(IClient* client) {
  */
 void ClientHandler::createClientTask(IClient* client) {
     task = new ClientTask(((ServerClient*) client), controller);
-    LINFO <<"Client task: " << task;
 }
 
 /**
@@ -40,11 +37,8 @@ void ClientHandler::createClientTask(IClient* client) {
  * @return the last client task created by the handler.
  */
 ClientTask* ClientHandler::getClientTask() {
-    LINFO <<"Inside \'getClientTask\', initializing temp";
     ClientTask* temp = task;
     task = nullptr;
-
-    LINFO << "Inside \'getClientTask\' sending temp: " << temp;
     return temp;
 }
 
@@ -56,9 +50,7 @@ ClientTask* ClientHandler::getClientTask() {
  */
 void ClientHandler::notifyClient(IClient* client, Notification* notification) {
     try {
-        LINFO <<"Sending notification to: " << client->getSocket();
         ((ServerClient*) client)->sendNotification(notification);
-        LINFO <<"Sending notification to: " << client->getSocket() << " done";
     } catch (exception& e) {
         std::string socket = intToString(client->getSocket());
 

@@ -33,7 +33,6 @@ Controller::Controller(IClientNotifier *clientNotifier) {
     commandSet.push_back(MyPair("start", new StartCommand(this->model)));
     commandSet.push_back(MyPair("list", new ListCommand(this->model)));
     commandSet.push_back(MyPair("play", new PlayCommand(this->model)));
-    //LINFO << "commandSet addresses: " << "\n" << "join: " << commandSet[0].second << "\n" << "close: " << commandSet[1].second << "\n" << "start: " << commandSet[2].second << "\n" << "list: " << commandSet[3].second << "\n" << "play: " << commandSet[4].second;
 }
 
 //---------- PUBLIC FUNCTIONS ----------
@@ -115,10 +114,10 @@ void Controller::handleGameStarted(ReversiGame *rG) {
  * @param args GameOverEventArgs -- the game over event arguments.
  */
 void Controller::handleGameOver(ReversiGame *rG, GameOverEventArgs *args) {
-    LINFO << "Handling game over";
     // Local Variables
     std::vector<ReversiGamePlayer *> *clients = rG->getAllClients();
     ServerClient *winner = (ServerClient *) args->getWinner()->getClient();
+    std::string finalBoardState = rG->getBoard()->toString();
 
     for (unsigned i = 0; i < clients->size(); ++i) {
         // inner loop variables
@@ -132,9 +131,11 @@ void Controller::handleGameOver(ReversiGame *rG, GameOverEventArgs *args) {
             message =
                     client1->getSocket() ==
                     winner->getSocket() ? "You Win!\n" : "You Lost!\n";
+            message += "The final board state is: \n";
+            message += finalBoardState + "\n";
         }
 
-        // create game over details
+        // notify client with game-over details
         Notification *notif = new Notification(message, GAME_OVER);
         clientNotifier->notifyClient(client1, notif);
     }

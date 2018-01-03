@@ -29,14 +29,11 @@ CommandResult* CloseCommand::execute(ServerClient* sender, std::vector<std::stri
     if(!(model->isInGame(sender)))
         return new CommandResult(false, ERROR, "You are not in a game", true);
 
-    LINFO << "Executing CloseCommand for: " << sender->getSocket();
     CloseRequest* req = new CloseRequest(sender, args[1]);
 
     try {
-        LINFO << "Closing the game through the model: " << args[1];
         model->closeGame(req);
     } catch (exception& e) {
-        LINFO << "Error while closing the game through the model: " << args[1];
         return new CommandResult(false, ERROR, "Error closing game", true);
     }
 

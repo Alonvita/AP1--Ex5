@@ -47,7 +47,7 @@ set(SERVER_FILES
 set(POOL_THREADING
 		# tasks
 		src/server/thread_pool/tasks/ClientTask.cpp src/server/thread_pool/tasks/ClientTask.h
-
+		src/server/thread_pool/tasks/ServerTask.cpp src/server/thread_pool/tasks/ServerTask.h
 		# Thread Pool
         src/server/thread_pool/PoolWorkerThread.cpp src/server/thread_pool/PoolWorkerThread.h
         src/server/thread_pool/Task.h

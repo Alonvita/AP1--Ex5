@@ -25,7 +25,6 @@ JoinCommand::JoinCommand(IModel *model) {
 CommandResult *JoinCommand::execute(ServerClient *sender, std::vector<std::string> args) {
     if (args.size() != 2)
         return new CommandResult(false, ERROR, "Usage: join + [name]\n", true);
-    //LINFO << "Executing JoinCommand for: " << sender->getSocket();
 
     if (model->isInGame(sender))
         return new CommandResult(false, ERROR, "You are already inside a game...\n", true);

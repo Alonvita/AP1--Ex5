@@ -37,7 +37,6 @@ CommandResult *PlayCommand::execute(ServerClient *sender, std::vector<std::strin
     cI.fromString(args[1]);
 
     if (cI.getRow() == -1 || cI.getCol() == -1) {
-        //LINFO << "CellIndex (-1,-1) -> return a bad move";
         return new CommandResult(false, ERROR, "Bad move: " + args[1] + "\n", true);
     }
 

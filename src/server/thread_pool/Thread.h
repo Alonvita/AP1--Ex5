@@ -35,5 +35,4 @@ private:
     pthread_t handle;
 };
 
-
 #endif //AP1_THREAD_H

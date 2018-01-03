@@ -29,22 +29,15 @@ CommandResult* StartCommand::execute(ServerClient* sender, std::vector<std::stri
         return new CommandResult(false, ERROR, "You are already in a game!", true);
     }
 
-    //LINFO << "Reached StartCommand with sender: " << sender->getSocket();
     if(args.size() != 2) {
-        //LERROR << "Args size is incorrect";
         return new CommandResult(false, ERROR, "Usage: start [name]", true);
     }
 
-    //LINFO << "creating a new start request";
     StartRequest* req = new StartRequest(sender, args[1]);
-    //LINFO << "new start request was created successfully for: " << args[1];
 
     try {
-        //LINFO << "Creating a new game for " << args[1];
         model->createGame(req);
-        //LINFO << "Creation successful: " << args[1];
     } catch (exception& e) {
-        //LERROR << "Error starting game";
         return new CommandResult(false, ERROR, "Error starting game", true);
     }
 
