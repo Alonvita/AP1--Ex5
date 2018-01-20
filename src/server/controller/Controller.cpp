@@ -35,6 +35,11 @@ Controller::Controller(IClientNotifier *clientNotifier) {
     commandSet.push_back(MyPair("play", new PlayCommand(this->model)));
 }
 
+/**
+ * ~Controller().
+ */
+Controller::~Controller() {}
+
 //---------- PUBLIC FUNCTIONS ----------
 
 /**

@@ -30,6 +30,14 @@ ServerClient::~ServerClient() {
 }
 
 /**
+ * serverClosed().
+ */
+void ServerClient::serverClosed() {
+    pthread_mutex_destroy(&this->mutex);
+    sendCommandResult(new CommandResult(false, UNDEFINED, "Server Closed\n", false));
+}
+
+/**
  * readMessage().
  *
  * @return the read message as string.
@@ -60,7 +68,9 @@ void ServerClient::writeMessage(Message *msg) {
 
     // write message to server
     std::string message = msg->toString();
-    write(clientSocket, message.c_str(), message.length() + 1);
+    if(write(clientSocket, message.c_str(), message.length() + 1) < 0) {
+        exit(0);
+    }
     pthread_mutex_unlock(&this->mutex);
 }
 

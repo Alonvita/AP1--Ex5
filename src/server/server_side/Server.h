@@ -48,7 +48,9 @@ private:
     // Local Class Variables
     int         port;
     int         serverSocket;
+    int         workingThreads;
     ThreadPool* threadPool;
+    ServerTask* sTask;
 };
 
 

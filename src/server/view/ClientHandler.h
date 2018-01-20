@@ -17,7 +17,7 @@
 class ClientHandler : public IClientHandler, public IClientNotifier {
 public:
     ClientHandler();
-    ~ClientHandler() {}
+    ~ClientHandler();
 
     // client handling
     void handleClient(IClient* client);
@@ -28,6 +28,7 @@ public:
     ClientTask* getClientTask();
 
 private:
+    IClient* client;
     ClientTask* task;
     Controller* controller;
 };

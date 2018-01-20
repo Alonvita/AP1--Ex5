@@ -12,9 +12,29 @@
  * @param threadPool ThreadPool* -- a referense to the server's threadpool
  * @param serverSocket int -- the server socket.
  */
-ServerTask::ServerTask(ThreadPool *threadPool, int serverSocket) {
+ServerTask::ServerTask(ThreadPool *threadPool, int serverSocket, int workingThreads) {
     this->threadPool = threadPool;
     this->serverSocket = serverSocket;
+    this->workingThreads = workingThreads;
+}
+
+ServerTask::~ServerTask() {
+    for (unsigned i = 0; i < this->clientTasks.size(); ++i)
+        delete clientTasks.at(i);
+}
+
+/**
+ * stop().
+ */
+void ServerTask::stop() {
+    if(this->workingThreads > 1) {
+        for (int i = 0; i < this->workingThreads - 1; ++i) {
+            clientTasks.at(i)->stop();
+            delete this->clientTasks.at(i);
+        }
+    }
+
+    exit(0);
 }
 
 /**
@@ -38,16 +58,19 @@ void ServerTask::run() {
                 // print client options for this server
                 writeClientOptions(c->getSocket());
 
-                // add a thread
-                threadPool->addWorkerThreads(1);
+                if (workingThreads > 5)
+                    // add a thread
+                    threadPool->addWorkerThreads(1);
+
 
                 handler->handleClient(c);
-
+                workingThreads++;
+                this->clientTasks.push_back(handler->getClientTask());
                 threadPool->addTask(handler->getClientTask());
 
                 c = nullptr;
             }
-        } catch (exception& e) {
+        } catch (exception &e) {
             break;
         }
     }

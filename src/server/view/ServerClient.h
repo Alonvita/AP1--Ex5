@@ -48,6 +48,8 @@ public:
 
     bool equals(ServerClient *other);
 
+    void serverClosed();
+
 private:
     // Server Related
     int clientSocket;

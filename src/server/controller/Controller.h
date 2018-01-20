@@ -34,7 +34,7 @@ public:
     Controller(IClientNotifier* clientNotifier);
 
     // Destruct
-    ~Controller() {}
+    ~Controller();
 
     // client handling
     CommandResult* executeCommand(std::string command, IClient* sender);

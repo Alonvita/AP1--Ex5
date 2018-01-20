@@ -14,11 +14,20 @@ ClientHandler::ClientHandler() {
 }
 
 /**
+ * ~ClientHandler().
+ */
+ClientHandler::~ClientHandler() {
+    delete this->controller;
+    delete this->client;
+}
+
+/**
  * HandleClient(Client client).
  *
  * @param client Client -- a client.
  */
 void ClientHandler::handleClient(IClient* client) {
+    this->client = client;
     createClientTask(client);
 }
 
@@ -37,9 +46,7 @@ void ClientHandler::createClientTask(IClient* client) {
  * @return the last client task created by the handler.
  */
 ClientTask* ClientHandler::getClientTask() {
-    ClientTask* temp = task;
-    task = nullptr;
-    return temp;
+    return task;
 }
 
 /**

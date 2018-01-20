@@ -20,6 +20,13 @@ Client::Client(std::string serverIP, int serverPort) {
 }
 
 /**
+ * ~Client().
+ */
+Client::~Client() {
+    close(this->clientSocket);
+}
+
+/**
  * updateConnectionStatus().
  */
 void Client::updateConnectionStatus() {
@@ -78,7 +85,6 @@ void Client::connected() {
 
         // read server traffic
         readMessageFromServer(&messageType, &skipWrite);
-
     } while (stayConnected);
 }
 

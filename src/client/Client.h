@@ -36,6 +36,7 @@ class Client {
 public:
     // initialization
     Client(std::string serverIP, int serverPort);
+    ~Client();
 
     // server communication functions
     void writeMessageToServer();

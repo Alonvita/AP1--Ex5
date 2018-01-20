@@ -19,7 +19,8 @@
  * @param int port -- server's port.
  */
 Server::Server(int port) : port(port) {
-    threadPool = new ThreadPool(0);
+    threadPool = new ThreadPool(5);
+    workingThreads = 0;
     serverSocket = -1;
 }
 
@@ -31,6 +32,7 @@ Server::Server(int port) : port(port) {
 Server::~Server() {
     close(this->serverSocket);
 
+    delete this->sTask;
     delete threadPool;
 }
 
@@ -43,11 +45,13 @@ void Server::start() {
     initSocket();
 
     // add a thread
-    threadPool->addWorkerThreads(1);
+    if(workingThreads > 4)
+        threadPool->addWorkerThreads(1);
 
     // add server Task as a main thread
-    ServerTask *serverTask = new ServerTask(threadPool, serverSocket);
-    threadPool->addTask(serverTask);
+    this->sTask = new ServerTask(threadPool, serverSocket, 1);
+    workingThreads++;
+    threadPool->addTask(sTask);
 }
 
 /**
@@ -88,5 +92,5 @@ void Server::initSocket() {
  * stop().
  */
 void Server::stop() {
-    close(this->serverSocket);
+    this->sTask->stop();
 }

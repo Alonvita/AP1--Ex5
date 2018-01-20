@@ -8,19 +8,23 @@
 
 #include "../Task.h"
 #include "../ThreadPool.h"
+#include "ClientTask.h"
 
 class ServerTask : public Task {
 public:
-    ServerTask(ThreadPool *threadPool, int serverSocket);
-    ~ServerTask() {};
+    ServerTask(ThreadPool *threadPool, int serverSocket, int workingThreads);
+    ~ServerTask();
 
     // task
     void run();
+    void stop();
     void showTask() {}
 
 private:
     int serverSocket;
+    int workingThreads;
     ThreadPool *threadPool;
+    std::vector<ClientTask*> clientTasks;
 
     //---------- PRIVATE FUNCTIONS ----------
     int     clientConnected(int serverSocket);

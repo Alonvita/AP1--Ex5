@@ -6,10 +6,11 @@
 #include "../../../easy_logging/easylogging++.h"
 
 /**
- * ClientTask().
+ * stop().
  */
-ClientTask::~ClientTask() {
-    delete this->client;
+void ClientTask::stop() {
+    keepCom = false;
+    this->client->serverClosed();
 }
 
 /**
@@ -17,13 +18,12 @@ ClientTask::~ClientTask() {
  */
 void ClientTask::run() {
     try {
-        bool keepCom = true;
+        this->keepCom = true;
         do {
             string command = client->readMessage();
             CommandResult* result = controller->executeCommand(command, client);
             keepCom = result->getKeepConnection();
             client->sendCommandResult(result);
-
 
         } while (keepCom && client->isConnected());
     } catch (exception &e) {

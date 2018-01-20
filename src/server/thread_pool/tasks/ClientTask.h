@@ -14,13 +14,15 @@ class ClientTask : public Task {
 public:
     ClientTask(ServerClient* client, Controller* controller) :
             client(client), controller(controller){};
-    ~ClientTask();
+    ~ClientTask(){};
 
     // task
     void run();
+    void stop();
     void showTask() {}
 
 private:
+    bool keepCom;
     ServerClient* client;
     Controller* controller;
 };
